@@ -1,3 +1,4 @@
+import { TrackSource } from 'livekit-server-sdk';
 import { AccessToken } from 'livekit-server-sdk';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -18,6 +19,15 @@ export async function POST(request: NextRequest) {
   }
   const identity = `${role}-${language}-${crypto.randomUUID()}`;
   const token = new AccessToken(process.env.LIVEKIT_API_KEY, process.env.LIVEKIT_API_SECRET, {identity, ttl:'2h', metadata:JSON.stringify({role,language})});
-  token.addGrant({roomJoin:true, room, canPublish:role !== 'listener', canSubscribe:true, canPublishData:false, ...(role !== 'listener' ? {canPublishSources:['microphone' as const]} : {})});
+  token.addGrant({
+  roomJoin: true,
+  room,
+  canPublish: role !== 'listener',
+  canSubscribe: true,
+  canPublishData: false,
+  ...(role !== 'listener'
+    ? { canPublishSources: [TrackSource.MICROPHONE] }
+    : {}),
+});
   return NextResponse.json({token:await token.toJwt(), url:process.env.LIVEKIT_URL});
 }
